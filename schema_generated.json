@@ -1,0 +1,100 @@
+{
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "symbol": {
+      "type": "string"
+    },
+    "analysis": {
+      "type": "object",
+      "properties": {
+        "summary": {
+          "type": "string"
+        },
+        "score": {
+          "type": "number"
+        },
+        "details": {
+          "type": "object",
+          "properties": {
+            "a": {
+              "type": "integer"
+            },
+            "b": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            }
+          },
+          "required": [
+            "a",
+            "b"
+          ],
+          "additionalProperties": true
+        }
+      },
+      "required": [
+        "summary",
+        "score",
+        "details"
+      ],
+      "additionalProperties": true
+    },
+    "timestamp": {
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "version"
+      ],
+      "additionalProperties": true
+    },
+    "memory_snapshot": {
+      "type": "object",
+      "properties": {
+        "preferred_name": {
+          "type": "string"
+        },
+        "preferences": {
+          "type": "object",
+          "properties": {
+            "lang": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "lang"
+          ],
+          "additionalProperties": true
+        }
+      },
+      "required": [
+        "preferred_name",
+        "preferences"
+      ],
+      "additionalProperties": true
+    }
+  },
+  "required": [
+    "id",
+    "symbol",
+    "analysis",
+    "timestamp",
+    "metadata",
+    "memory_snapshot"
+  ],
+  "additionalProperties": true
+}
