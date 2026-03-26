@@ -1,0 +1,73 @@
+name: Validate Reports
+
+on:
+  pull_request:
+    paths:
+      - 'reports/**'
+      - 'scripts/**'
+      - '.github/workflows/**'
+  push:
+    branches:
+      - main
+    paths:
+      - 'reports/**'
+      - 'scripts/**'
+      - '.github/workflows/**'
+
+jobs:
+  validate:
+    name: Validate report snapshots and meta
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install validation dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install jsonschema
+
+      - name: Run ensure_meta script (non-destructive check)
+        run: |
+          # ensure_meta.py should exit non-zero only on fatal errors
+          python scripts/ensure_meta.py --check
+        continue-on-error: false
+
+      - name: Validate JSON schema for changed reports
+        env:
+          GITHUB_WORKSPACE: ${{ github.workspace }}
+        run: |
+          # Find changed or added report files in the PR (or all reports on push)
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            files=$(git --no-pager diff --name-only ${{ github.event.pull_request.base.sha }}...${{ github.sha }} | grep '^reports/' || true)
+          else
+            files=$(git ls-files 'reports/*.json' || true)
+          fi
+          if [ -z "$files" ]; then
+            echo "No report JSON files to validate."
+            exit 0
+          fi
+          echo "Validating files:"
+          echo "$files"
+          for f in $files; do
+            echo "Validating $f"
+            python -m jsonschema -i "$f" schema.json || { echo "Schema validation failed for $f"; exit 1; }
+          done
+
+      - name: Run smoke tests
+        run: |
+          python -m pip install pytest
+          pytest -q tests/test_smoke.py
+
+      - name: Upload validation artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: report-validation-logs
+          path: |
+            ./validation-logs || true
